@@ -1,4 +1,8 @@
 from fastapi import FastAPI
+from backend.database import Base, engine
+from backend import models
+
+Base.metadata.create_all(bind=engine)
 
 # Create the FastAPI app instance
 app = FastAPI()
