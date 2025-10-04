@@ -17,16 +17,16 @@ import React, { useMemo, useState } from "react";
 const API = import.meta?.env?.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 const FIELDS_OF_STUDY = [
-  "Science",
-  "Technology",
-  "Engineering",
-  "Math",
-  "Liberal Arts",
-  "Pre-Med",
-  "Pre-Law",
-  "Art",
-  "Other",
-  "Undecided",
+  "science",
+  "technology",
+  "engineering",
+  "math",
+  "liberal Arts",
+  "pre-Med",
+  "pre-Law",
+  "art",
+  "other",
+  "undecided",
 ];
 
 const NJ_COLLEGES = [
@@ -96,8 +96,19 @@ function Section({ title, children, right }) {
 
 function Field({ label, children }) {
   return (
-    <label className="block mb-3">
-      <span className="block text-sm font-medium mb-1">{label}</span>
+    <label
+      style={{ display: "block", marginBottom: "0.75rem" }} // ~mb-3
+    >
+      <span
+        style={{
+          display: "block",          // label on top
+          fontSize: "0.875rem",      // ~text-sm
+          fontWeight: 600,           // ~font-medium
+          marginBottom: "0.25rem",   // spacing under the label
+        }}
+      >
+        {label}
+      </span>
       {children}
     </label>
   );
@@ -153,7 +164,7 @@ function Button({ variant = "solid", children, className, ...rest }) {
 function Modal({ open, onClose, title, children, footer }) {
   if (!open) return null;
   return (
-    <div
+    <div 
       className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
       role="dialog"
       aria-modal
@@ -178,7 +189,7 @@ function Modal({ open, onClose, title, children, footer }) {
   );
 }
 
-function MentorCard({ mentor, onBook }) {
+function MentorCard({ mentor}) {
   return (
     <div className="rounded-2xl border p-4 shadow-sm bg-white flex flex-col">
       <img
@@ -194,7 +205,6 @@ function MentorCard({ mentor, onBook }) {
       </p>
       {mentor.bio && <p className="text-sm mt-2 line-clamp-3">{mentor.bio}</p>}
       <div className="mt-4" />
-      <Button onClick={() => onBook(mentor)}>Book</Button>
     </div>
   );
 }
@@ -220,11 +230,6 @@ export default function App() {
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null); // {type:"success"|"error", msg}
-
-  // Booking modal
-  const [bookingOpen, setBookingOpen] = useState(false);
-  const [bookingMentor, setBookingMentor] = useState(null);
-  const [bookingTime, setBookingTime] = useState("");
 
   const canSubmitMentor = useMemo(
     () => email && uni && major && slotsRaw,
@@ -321,38 +326,10 @@ export default function App() {
     }
   }
 
-  function openBooking(mentor) {
-    setBookingMentor(mentor);
-    setBookingTime("");
-    setBookingOpen(true);
-  }
-
-  async function confirmBooking() {
-    if (!bookingMentor || !bookingTime || !email) {
-      showToast("error", "Please provide your email and a time in ISO format.");
-      return;
-    }
-    try {
-      const resp = await fetch(`${API}/sessions/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          mentor_id:
-            bookingMentor.id ?? bookingMentor.mentor_id ?? bookingMentor.pk,
-          student_email: email,
-          time_iso: bookingTime,
-        }),
-      });
-      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-      showToast("success", "Session requested!");
-      setBookingOpen(false);
-    } catch (err) {
-      showToast("error", `Failed to request session: ${err.message}`);
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+    <div  
+        style={{ paddingLeft: "24px" }}
+        className="min-h-screen bg-neutral-50 text-neutral-900">
       <header className="w-full border-b bg-white">
         <div className="max-w-5xl mx-auto p-4">
           <h1 className="text-2xl font-bold">Transfer Peer Connect</h1>
@@ -360,7 +337,7 @@ export default function App() {
       </header>
 
       <main className="p-4">
-        <Section title="Your Info">
+        <Section>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="I am a...">
               <select
@@ -417,13 +394,17 @@ export default function App() {
                 </select>
               </Field>
 
-              <Field label="Bio">
-                <TextArea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                />
-              </Field>
-            </div>
+            <div className="md:col-span-2">
+                <Field label="Bio">
+                  <TextArea
+                    rows={4}
+                    cols={50}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                  />
+                </Field>
+              </div>
+          </div>
 
             <div className="mt-4">
               <Button
@@ -466,21 +447,6 @@ export default function App() {
                   ))}
                 </select>
               </Field>
-
-              <Field label="Target University">
-                <select
-                  value={targetUni}
-                  onChange={(e) => setTargetUni(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2"
-                >
-                  <option value="">Select your target university…</option>
-                  {NJ_COLLEGES.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
             </div>
 
             <div className="mt-4">
@@ -498,10 +464,26 @@ export default function App() {
           title="Find Mentors"
           right={
             <div className="flex items-center gap-2">
+            <Field label="Target University">
+                <select
+                  value={targetUni}
+                  onChange={(e) => setTargetUni(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select your target university…</option>
+                  {NJ_COLLEGES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+            </Field>
               <Button onClick={findMentors}>
                 {loading ? "Searching..." : "Search"}
               </Button>
+              
             </div>
+            
           }
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -519,7 +501,6 @@ export default function App() {
               <MentorCard
                 key={m.id ?? m.user_email ?? Math.random()}
                 mentor={m}
-                onBook={openBooking}
               />
             ))}
             {!loading && mentors.length === 0 && (
@@ -531,66 +512,6 @@ export default function App() {
           </div>
         </Section>
       </main>
-
-      {/* Booking Modal */}
-      <Modal
-        open={bookingOpen}
-        onClose={() => setBookingOpen(false)}
-        title={
-          bookingMentor
-            ? `Book ${bookingMentor.name || `Mentor #${bookingMentor.id}`}`
-            : "Book session"
-        }
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setBookingOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={confirmBooking}>Confirm</Button>
-          </>
-        }
-      >
-        <div className="space-y-3">
-          <Field label="Your email">
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
-          </Field>
-
-          <Field label="Choose time (ISO)">
-            <Input
-              placeholder="2025-10-01T15:00:00"
-              value={bookingTime}
-              onChange={(e) => setBookingTime(e.target.value)}
-            />
-          </Field>
-
-          {Array.isArray(bookingMentor?.available_slots) &&
-            bookingMentor.available_slots.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-1">Suggested times:</p>
-                <div className="flex flex-wrap gap-2">
-                  {bookingMentor.available_slots.map((t, i) => (
-                    <Button
-                      key={i}
-                      variant="outline"
-                      onClick={() => setBookingTime(t)}
-                    >
-                      {t}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          <p className="text-xs text-black/60">
-            Use ISO 8601 format (e.g., 2025-10-01T15:00:00). The backend should
-            validate or normalize the time zone.
-          </p>
-        </div>
-      </Modal>
 
       {/* Toast */}
       {toast && (
