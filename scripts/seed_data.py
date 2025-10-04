@@ -31,22 +31,26 @@ db.commit()
 m1_profile = models.Mentor(user_id=mentor1.id,
                            university="Rutgers",
                            area_of_study="technology",
-                           bio="Transfered from RVCC into Rutgers, happy to help with anything!")
+                           bio="Transfered from RVCC into Rutgers, happy to help with anything!",
+                           previous_school="RVCC")
 
 m2_profile = models.Mentor(user_id=mentor2.id,
                            university="Rutgers",
                            area_of_study="engineering",
-                           bio="Transfered from RVCC into Princeton, I'll help you achieve your goals!")
+                           bio="Transfered from RVCC into Princeton, I'll help you achieve your goals!",
+                           previous_school="RVCC")
 
 m3_profile = models.Mentor(user_id=mentor3.id,
                            university="Rutgers",
                            area_of_study="liberal arts",
-                           bio="Transfered from UCC into Rutgers, happy to assist!")
+                           bio="Transfered from UCC into Rutgers, happy to assist!",
+                           previous_school="UCC")
 
 m4_profile = models.Mentor(user_id=mentor4.id,
                            university="Rutgers",
                            area_of_study="engineering",
-                           bio="Transfered from MCCC into Rowan University, I'll help you out!")
+                           bio="Transfered from MCCC into Rowan University, I'll help you out!",
+                           previous_school="MCCC")
 
 # create student profile
 s1_profile = models.Student(user_id=student1.id,

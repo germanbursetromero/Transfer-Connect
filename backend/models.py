@@ -22,7 +22,7 @@ class Mentor(Base):
     area_of_study = Column(String)
     bio = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
-
+    previous_school = Column(String)
     user = relationship("User", back_populates="mentors")
 
 class Student(Base):
