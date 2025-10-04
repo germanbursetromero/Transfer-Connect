@@ -10,3 +10,4 @@ yagmail
 pillow
 pytesseract
 sentence-transformers
+passlib[bcrypt]
