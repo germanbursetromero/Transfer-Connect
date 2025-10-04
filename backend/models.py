@@ -19,7 +19,7 @@ class Mentor(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     university = Column(String)
-    major = Column(String)
+    area_of_study = Column(String)
     bio = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
@@ -29,8 +29,8 @@ class Student(Base):
     __tablename__ = "students"
 
     id = Column(Integer, primary_key=True, index=True)
-    community_college = Column(String)
-    intended_major = Column(String)
+    college = Column(String)
+    intended_area_of_study = Column(String)
     target_university = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
