@@ -17,56 +17,65 @@ import React, { useMemo, useState } from "react";
 const API = import.meta?.env?.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 const FIELDS_OF_STUDY = [
-  "Science","Technology","Engineering","Math","Liberal Arts","Pre-Med","Pre-Law","Art","Other","Undecided"
+  "Science",
+  "Technology",
+  "Engineering",
+  "Math",
+  "Liberal Arts",
+  "Pre-Med",
+  "Pre-Law",
+  "Art",
+  "Other",
+  "Undecided",
 ];
 
 const NJ_COLLEGES = [
-  "Rutgers University–New Brunswick",
-  "Rutgers University–Newark",
-  "Rutgers University–Camden",
-  "New Jersey Institute of Technology",
-  "Rowan University",
-  "Montclair State University",
-  "The College of New Jersey",
-  "Kean University",
-  "Thomas Edison State University",
-  "New Jersey City University",
-  "William Paterson University of New Jersey",
-  "Ramapo College of New Jersey",
-  "Stockton University",
-  "Princeton University",
-  "Seton Hall University",
-  "Stevens Institute of Technology",
-  "Monmouth University",
-  "Rider University",
-  "Fairleigh Dickinson University",
-  "Drew University",
-  "Caldwell University",
-  "Centenary University",
-  "Felician University",
-  "Georgian Court University",
-  "Saint Peter’s University",
-  "Saint Elizabeth University",
-  "Pillar College",
-  "Bloomfield College of Montclair State University",
   "Atlantic Cape Community College",
   "Bergen Community College",
+  "Bloomfield College of Montclair State University",
   "Brookdale Community College",
+  "Caldwell University",
   "Camden County College",
+  "Centenary University",
   "County College of Morris",
+  "Drew University",
   "Essex County College",
+  "Fairleigh Dickinson University",
+  "Felician University",
+  "Georgian Court University",
   "Hudson County Community College",
+  "Kean University",
   "Mercer County Community College",
   "Middlesex College",
+  "Monmouth University",
+  "Montclair State University",
+  "New Jersey City University",
+  "New Jersey Institute of Technology",
   "Ocean County College",
   "Passaic County Community College",
+  "Pillar College",
+  "Princeton University",
+  "Ramapo College of New Jersey",
   "Raritan Valley Community College",
+  "Rider University",
   "Rowan College at Burlington County",
   "Rowan College of South Jersey",
+  "Rowan University",
+  "Rutgers University Camden",
+  "Rutgers University New Brunswick",
+  "Rutgers University Newark",
+  "Saint Elizabeth University",
+  "Saint Peter’s University",
   "Salem Community College",
+  "Seton Hall University",
+  "Stevens Institute of Technology",
+  "Stockton University",
   "Sussex County Community College",
+  "The College of New Jersey",
+  "Thomas Edison State University",
   "Union College of Union County, NJ",
   "Warren County Community College",
+  "William Paterson University of New Jersey",
 ];
 
 function classNames(...xs) {
@@ -144,7 +153,11 @@ function Button({ variant = "solid", children, className, ...rest }) {
 function Modal({ open, onClose, title, children, footer }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4" role="dialog" aria-modal>
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
+      role="dialog"
+      aria-modal
+    >
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="text-lg font-semibold">{title}</h3>
@@ -157,7 +170,9 @@ function Modal({ open, onClose, title, children, footer }) {
           </button>
         </div>
         <div className="p-4">{children}</div>
-        {footer && <div className="p-4 border-t flex justify-end gap-2">{footer}</div>}
+        {footer && (
+          <div className="p-4 border-t flex justify-end gap-2">{footer}</div>
+        )}
       </div>
     </div>
   );
@@ -171,7 +186,9 @@ function MentorCard({ mentor, onBook }) {
         alt={mentor.name}
         className="w-full aspect-[3/2] object-cover rounded-xl mb-3"
       />
-      <h4 className="text-lg font-semibold">{mentor.name || `Mentor #${mentor.id}`}</h4>
+      <h4 className="text-lg font-semibold">
+        {mentor.name || `Mentor #${mentor.id}`}
+      </h4>
       <p className="text-sm text-black/70">
         {mentor.university} — {mentor.major}
       </p>
@@ -179,25 +196,6 @@ function MentorCard({ mentor, onBook }) {
       <div className="mt-4" />
       <Button onClick={() => onBook(mentor)}>Book</Button>
     </div>
-  );
-}
-
-function DatalistSelect({ id, options, value, onChange, placeholder = "Select..." }) {
-  return (
-    <>
-      <input
-        list={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
-      />
-      <datalist id={id}>
-        {options.map((opt) => (
-          <option key={opt} value={opt} />
-        ))}
-      </datalist>
-    </>
   );
 }
 
@@ -210,7 +208,7 @@ export default function App() {
   const [uni, setUni] = useState("");
   const [major, setMajor] = useState("");
   const [bio, setBio] = useState("");
-  const [slotsRaw, setSlotsRaw] = useState("[\"2025-10-01T15:00:00\"]");
+  const [slotsRaw, setSlotsRaw] = useState('["2025-10-01T15:00:00"]');
 
   // Student form
   const [cc, setCc] = useState("");
@@ -232,6 +230,7 @@ export default function App() {
     () => email && uni && major && slotsRaw,
     [email, uni, major, slotsRaw]
   );
+
   const canSubmitStudent = useMemo(
     () => email && cc && intendedMajor && targetUni,
     [email, cc, intendedMajor, targetUni]
@@ -247,7 +246,8 @@ export default function App() {
     let available_slots = [];
     try {
       const parsed = JSON.parse(slotsRaw || "[]");
-      if (!Array.isArray(parsed)) throw new Error("Availability must be an array of ISO strings");
+      if (!Array.isArray(parsed))
+        throw new Error("Availability must be an array of ISO strings");
       available_slots = parsed;
     } catch (e) {
       showToast("error", `Invalid availability JSON: ${e.message}`);
@@ -299,7 +299,9 @@ export default function App() {
       // Try query by student_email first
       let url = `${API}/mentors/`;
       if (searchEmail) {
-        const tryUrl = `${API}/mentors/?student_email=${encodeURIComponent(searchEmail)}`;
+        const tryUrl = `${API}/mentors/?student_email=${encodeURIComponent(
+          searchEmail
+        )}`;
         const tryResp = await fetch(tryUrl);
         if (tryResp.ok) {
           const data = await tryResp.json();
@@ -335,7 +337,8 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mentor_id: bookingMentor.id ?? bookingMentor.mentor_id ?? bookingMentor.pk,
+          mentor_id:
+            bookingMentor.id ?? bookingMentor.mentor_id ?? bookingMentor.pk,
           student_email: email,
           time_iso: bookingTime,
         }),
@@ -369,6 +372,7 @@ export default function App() {
                 <option>Mentor</option>
               </select>
             </Field>
+
             <Field label="Email">
               <Input
                 type="email"
@@ -380,116 +384,123 @@ export default function App() {
           </div>
         </Section>
 
-          {role === "Mentor" ? (
-            <Section title="Create Mentor Profile">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="University">
-              <DatalistSelect
-                id="nj-colleges-mentor"
-                options={NJ_COLLEGES}
-                value={uni}
-                onChange={setUni}
-                placeholder="Search/select a college"
-              />
-            </Field>
+        {role === "Mentor" ? (
+          <Section title="Create Mentor Profile">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Current College">
+                <select
+                  value={uni}
+                  onChange={(e) => setUni(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select a college…</option>
+                  {NJ_COLLEGES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-            <Field label="Field of Study">
-              <DatalistSelect
-                id="fields-of-study-mentor"
-                options={FIELDS_OF_STUDY}
-                value={major}
-                onChange={setMajor}
-                placeholder="Search/select a field"
-              />
-            </Field>
+              <Field label="Field of Study">
+                <select
+                  value={major}
+                  onChange={(e) => setMajor(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select a field…</option>
+                  {FIELDS_OF_STUDY.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
+              <Field label="Bio">
+                <TextArea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                />
+              </Field>
+            </div>
 
-    <Field label="Bio">
-      <TextArea value={bio} onChange={(e) => setBio(e.target.value)} />
-    </Field>
-  </div>
-
-  <div className="mt-4">
-    <Button onClick={createMentorProfile} disabled={!canSubmitMentor}>
-      Submit Mentor
-    </Button>
-  </div>
-      </Section>
-        ) : (
-            <Section title="Create Student Profile">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Current College">
-              <select
-                value={cc}
-                onChange={(e) => setCc(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2"
+            <div className="mt-4">
+              <Button
+                onClick={createMentorProfile}
+                disabled={!canSubmitMentor}
               >
-                <option>Rutgers University New Brunswick</option>
-                <option>Rutgers University Newark</option>
-                <option>Rutgers University Camden</option>
-                <option>New Jersey Institute of Technology</option>
-                <option>Rowan University</option>
-                <option>Montclair State University</option>
-                <option>The College of New Jersey</option>
-                <option>Kean University</option>
-                <option>Thomas Edison State University</option>
-                <option>New Jersey City University</option>
-                <option>William Paterson University of New Jersey</option>
-                <option>Ramapo College of New Jersey</option>
-                <option>Stockton University</option>
-                <option>Princeton University</option>
-                <option>Seton Hall University</option>
-                <option>Stevens Institute of Technology</option>
-                <option>Monmouth University</option>
-                <option>Rider University</option>
-                <option>Fairleigh Dickinson University</option>
-                <option>Drew University</option>
-                <option>Caldwell University</option>
-                <option>Centenary University</option>
-                <option>Felician University</option>
-                <option>Georgian Court University</option>
-                <option>Saint Peter’s University</option>
-                <option>Saint Elizabeth University</option>
-                <option>Pillar College</option>
-                <option>Bloomfield College of Montclair State University</option>
-                <option>Atlantic Cape Community College</option>
-                <option>Bergen Community College</option>
-                <option>Brookdale Community College</option>
-                <option>Camden County College</option>
-                <option>County College of Morris</option>
-                <option>Essex County College</option>
-                <option>Hudson County Community College</option>
-                <option>Mercer County Community College</option>
-                <option>Middlesex College</option>
-                <option>Ocean County College</option>
-                <option>Passaic County Community College</option>
-                <option>Raritan Valley Community College</option>
-                <option>Rowan College at Burlington County</option>
-                <option>Rowan College of South Jersey</option>
-                <option>Salem Community College</option>
-                <option>Sussex County Community College</option>
-                <option>Union College of Union County, NJ</option>
-                <option>Warren County Community College</option>
-              </select>
-                </Field>
-                <Field label="Intended Field of Study"><Input value={intendedMajor} onChange={(e) => setIntendedMajor(e.target.value)} /></Field>
-                <Field label="Target University"><Input value={targetUni} onChange={(e) => setTargetUni(e.target.value)} /></Field>
-              </div>
+                Submit Mentor
+              </Button>
+            </div>
+          </Section>
+        ) : (
+          <Section title="Create Student Profile">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Current College">
+                <select
+                  value={cc}
+                  onChange={(e) => setCc(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select a college…</option>
+                  {NJ_COLLEGES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-              <div className="mt-4">
-                <Button onClick={createStudentProfile} disabled={!canSubmitStudent}>
-                  Submit Student
-                </Button>
-              </div>
-</Section>
+              <Field label="Intended Field of Study">
+                <select
+                  value={intendedMajor}
+                  onChange={(e) => setIntendedMajor(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select a field…</option>
+                  {FIELDS_OF_STUDY.map((f) => (
+                    <option key={f} value={f}>
+                      {f}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
+              <Field label="Target University">
+                <select
+                  value={targetUni}
+                  onChange={(e) => setTargetUni(e.target.value)}
+                  className="w-full rounded-xl border px-3 py-2"
+                >
+                  <option value="">Select your target university…</option>
+                  {NJ_COLLEGES.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            </div>
+
+            <div className="mt-4">
+              <Button
+                onClick={createStudentProfile}
+                disabled={!canSubmitStudent}
+              >
+                Submit Student
+              </Button>
+            </div>
+          </Section>
         )}
 
         <Section
           title="Find Mentors"
           right={
             <div className="flex items-center gap-2">
-              <Button onClick={findMentors}>{loading ? "Searching..." : "Search"}</Button>
+              <Button onClick={findMentors}>
+                {loading ? "Searching..." : "Search"}
+              </Button>
             </div>
           }
         >
@@ -505,10 +516,17 @@ export default function App() {
 
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mentors.map((m) => (
-              <MentorCard key={m.id ?? m.user_email ?? Math.random()} mentor={m} onBook={openBooking} />
+              <MentorCard
+                key={m.id ?? m.user_email ?? Math.random()}
+                mentor={m}
+                onBook={openBooking}
+              />
             ))}
             {!loading && mentors.length === 0 && (
-              <p className="text-sm text-black/60">No mentors yet. Try searching or create some mentor profiles first.</p>
+              <p className="text-sm text-black/60">
+                No mentors yet. Try searching or create some mentor profiles
+                first.
+              </p>
             )}
           </div>
         </Section>
@@ -518,18 +536,29 @@ export default function App() {
       <Modal
         open={bookingOpen}
         onClose={() => setBookingOpen(false)}
-        title={bookingMentor ? `Book ${bookingMentor.name || `Mentor #${bookingMentor.id}`}` : "Book session"}
+        title={
+          bookingMentor
+            ? `Book ${bookingMentor.name || `Mentor #${bookingMentor.id}`}`
+            : "Book session"
+        }
         footer={
           <>
-            <Button variant="ghost" onClick={() => setBookingOpen(false)}>Cancel</Button>
+            <Button variant="ghost" onClick={() => setBookingOpen(false)}>
+              Cancel
+            </Button>
             <Button onClick={confirmBooking}>Confirm</Button>
           </>
         }
       >
         <div className="space-y-3">
           <Field label="Your email">
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
+            <Input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
           </Field>
+
           <Field label="Choose time (ISO)">
             <Input
               placeholder="2025-10-01T15:00:00"
@@ -537,17 +566,29 @@ export default function App() {
               onChange={(e) => setBookingTime(e.target.value)}
             />
           </Field>
-          {Array.isArray(bookingMentor?.available_slots) && bookingMentor.available_slots.length > 0 && (
-            <div>
-              <p className="text-sm font-medium mb-1">Suggested times:</p>
-              <div className="flex flex-wrap gap-2">
-                {bookingMentor.available_slots.map((t, i) => (
-                  <Button key={i} variant="outline" onClick={() => setBookingTime(t)}>{t}</Button>
-                ))}
+
+          {Array.isArray(bookingMentor?.available_slots) &&
+            bookingMentor.available_slots.length > 0 && (
+              <div>
+                <p className="text-sm font-medium mb-1">Suggested times:</p>
+                <div className="flex flex-wrap gap-2">
+                  {bookingMentor.available_slots.map((t, i) => (
+                    <Button
+                      key={i}
+                      variant="outline"
+                      onClick={() => setBookingTime(t)}
+                    >
+                      {t}
+                    </Button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          <p className="text-xs text-black/60">Use ISO 8601 format (e.g., 2025-10-01T15:00:00). The backend should validate or normalize the time zone.</p>
+            )}
+
+          <p className="text-xs text-black/60">
+            Use ISO 8601 format (e.g., 2025-10-01T15:00:00). The backend should
+            validate or normalize the time zone.
+          </p>
         </div>
       </Modal>
 
@@ -569,6 +610,5 @@ export default function App() {
         API base: <code>{API}</code>
       </footer>
     </div>
-    
   );
 }
