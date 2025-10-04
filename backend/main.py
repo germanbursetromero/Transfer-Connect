@@ -33,18 +33,18 @@ def ping():
 def get_matches(student_id:int,
                 desired_university: str,
                 intended_area_of_study: str,
-                previous_school: str,
+                college: str,
                 db: Session = Depends(get_db)):
-    mentors = find_matches(db, student_id, desired_university, intended_area_of_study, previous_school)
+    mentors = find_matches(db, student_id, desired_university, intended_area_of_study, college)
     return [
         {
             "id": m.id,
-            "name": m.name,
-            "email": m.email,
-            "institution": m.institution,
+            "name": m.user.name,
+            "email": m.user.email,
+            "university": m.university,
             "area_of_study": m.area_of_study,
             "bio": m.bio,
-            "previous_school": m.previous_school
+            "college": m.previous_school
         }
         for m in mentors
     ]

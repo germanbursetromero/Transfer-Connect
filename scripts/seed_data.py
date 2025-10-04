@@ -15,7 +15,7 @@ db.commit()
 mentor1 = models.User(email="john@rutgers.edu", name="John", role="mentor")
 mentor2 = models.User(email="liam@princeton.edu", name="Liam", role="mentor")
 mentor3 = models.User(email="jaylin@princeton.edu", name="Jaylin", role="mentor")
-mentor4 = models.User(email="billy@rowan.edu", name="Billy", role="mentor")
+mentor4 = models.User(email="billy@rutgers.edu", name="Billy", role="mentor")
 
 # create test transfer students
 
@@ -31,28 +31,28 @@ db.commit()
 m1_profile = models.Mentor(user_id=mentor1.id,
                            university="Rutgers",
                            area_of_study="technology",
-                           bio="Transfered from RVCC into Rutgers, happy to help with anything!",
-                           previous_school="RVCC")
+                           previous_school="RVCC",
+                           bio="Transfered from RVCC into Rutgers, happy to help with anything!")
 
 m2_profile = models.Mentor(user_id=mentor2.id,
-                           university="Rutgers",
+                           university="Princeton",
                            area_of_study="engineering",
-                           bio="Transfered from RVCC into Princeton, I'll help you achieve your goals!",
-                           previous_school="RVCC")
+                           previous_school="RVCC",
+                           bio="Transfered from RVCC into Princeton, I'll help you achieve your goals!")
 
 m3_profile = models.Mentor(user_id=mentor3.id,
-                           university="Rutgers",
+                           university="Princeton",
                            area_of_study="liberal arts",
-                           bio="Transfered from UCC into Rutgers, happy to assist!",
-                           previous_school="UCC")
+                           previous_school="UCCC",
+                           bio="Transfered from UCC into Rutgers, happy to assist!")
 
 m4_profile = models.Mentor(user_id=mentor4.id,
                            university="Rutgers",
                            area_of_study="engineering",
-                           bio="Transfered from MCCC into Rowan University, I'll help you out!",
-                           previous_school="MCCC")
+                           previous_school="MCCC",
+                           bio="Transfered from MCCC into Rutgers University, I'll help you out!")
 
-# create student profile
+# create student profiles
 s1_profile = models.Student(user_id=student1.id,
                             college="RVCC",
                             intended_area_of_study="liberal arts")
@@ -69,7 +69,7 @@ s4_profile = models.Student(user_id=student4.id,
                             college="MCCC",
                             intended_area_of_study="technology")
 
-db.add_all([m2_profile, m2_profile, m3_profile, m4_profile, s1_profile, s2_profile, s3_profile, s4_profile])
+db.add_all([m1_profile, m2_profile, m3_profile, m4_profile, s1_profile, s2_profile, s3_profile, s4_profile])
 db.commit()
 
 

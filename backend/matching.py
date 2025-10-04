@@ -1,13 +1,14 @@
 from sqlalchemy.orm import Session
 from . import models
+from sqlalchemy import func
 
-def find_matches(db: Session, student_id: int, desired_university: str, intended_area_of_study: str, previous_school: str):
+def find_matches(db: Session, student_id: int, desired_university: str, intended_area_of_study: str, college: str):
     """
     Returns the mentors that match the student's info ranked by how well they match
     """
 
     # get mentors at chosen university
-    mentors = db.query(models.Mentor).filter(models.Mentor.university == desired_university).all()
+    mentors = db.query(models.Mentor).filter(func.lower(models.Mentor.university) == desired_university.lower()).all()
 
     # get student info
     student = db.query(models.Student).filter(models.Student.id == student_id).first()
@@ -22,6 +23,7 @@ def find_matches(db: Session, student_id: int, desired_university: str, intended
 
         if mentor.previous_school.lower() == student.college.lower():
             score += 1
+
         ranked.append((score, mentor))
 
     ranked.sort(key=lambda x: x[0], reverse=True)
