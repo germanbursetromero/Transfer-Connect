@@ -1,32 +1,11 @@
 import React, { useMemo, useState } from "react";
-
-/**
- * React single-file replacement for the provided Streamlit MVP.
- *
- * Drop this into `src/App.jsx` of a Vite/Create React App project.
- * Make sure your backend (FastAPI/Django/etc.) runs on http://127.0.0.1:8000
- * and has CORS enabled for your frontend origin.
- *
- * Endpoints used (mirroring the Streamlit example):
- *  - POST   /mentors/   { user_email, university, major, bio, available_slots }
- *  - POST   /students/  { user_email, community_college, intended_major, target_university }
- *  - GET    /mentors/?student_email=...   (fallback to GET /mentors/ if unsupported)
- *  - POST   /sessions/  { mentor_id, student_email, time_iso }
- */
+import "./App.css";
 
 const API = import.meta?.env?.VITE_API_BASE ?? "http://127.0.0.1:8000";
 
 const FIELDS_OF_STUDY = [
-  "science",
-  "technology",
-  "engineering",
-  "math",
-  "liberal Arts",
-  "pre-Med",
-  "pre-Law",
-  "art",
-  "other",
-  "undecided",
+  "science", "technology", "engineering", "math", "liberal Arts",
+  "pre-Med", "pre-Law", "art", "other", "undecided",
 ];
 
 const NJ_COLLEGES = [
@@ -75,7 +54,7 @@ const NJ_COLLEGES = [
   "Thomas Edison State University",
   "Union College of Union County, NJ",
   "Warren County Community College",
-  "William Paterson University of New Jersey",
+  "William Paterson University of New Jersey"
 ];
 
 function classNames(...xs) {
@@ -96,15 +75,13 @@ function Section({ title, children, right }) {
 
 function Field({ label, children }) {
   return (
-    <label
-      style={{ display: "block", marginBottom: "0.75rem" }} // ~mb-3
-    >
+    <label style={{ display: "block", marginBottom: "0.75rem" }}>
       <span
         style={{
-          display: "block",          // label on top
-          fontSize: "0.875rem",      // ~text-sm
-          fontWeight: 600,           // ~font-medium
-          marginBottom: "0.25rem",   // spacing under the label
+          display: "block",
+          fontSize: "0.875rem",
+          fontWeight: 600,
+          marginBottom: "0.25rem",
         }}
       >
         {label}
@@ -127,25 +104,10 @@ function Input(props) {
   );
 }
 
-function TextArea(props) {
-  return (
-    <textarea
-      {...props}
-      className={classNames(
-        "w-full rounded-xl border px-3 py-2 outline-none",
-        "focus:ring-2 focus:ring-black/10",
-        props.className
-      )}
-    />
-  );
-}
-
 function Button({ variant = "solid", children, className, ...rest }) {
   const base =
     variant === "solid"
       ? "bg-black text-white hover:bg-black/90"
-      : variant === "danger"
-      ? "bg-red-600 text-white hover:bg-red-700"
       : "bg-white text-black border hover:bg-black/5";
   return (
     <button
@@ -161,35 +123,7 @@ function Button({ variant = "solid", children, className, ...rest }) {
   );
 }
 
-function Modal({ open, onClose, title, children, footer }) {
-  if (!open) return null;
-  return (
-    <div 
-      className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4"
-      role="dialog"
-      aria-modal
-    >
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="grid place-items-center size-9 rounded-full hover:bg-black/5"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-        {footer && (
-          <div className="p-4 border-t flex justify-end gap-2">{footer}</div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MentorCard({ mentor}) {
+function MentorCard({ mentor }) {
   return (
     <div className="rounded-2xl border p-4 shadow-sm bg-white flex flex-col">
       <img
@@ -204,118 +138,68 @@ function MentorCard({ mentor}) {
         {mentor.university} — {mentor.major}
       </p>
       {mentor.bio && <p className="text-sm mt-2 line-clamp-3">{mentor.bio}</p>}
-      <div className="mt-4" />
     </div>
   );
 }
 
 export default function App() {
-  // Global fields
-  const [role, setRole] = useState("Student");
+  const [page, setPage] = useState("auth");
+  const [authMode, setAuthMode] = useState("login");
+
+  // Auth + profile
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [password, setPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
+  const [role, setRole] = useState("Student");
+  const [fieldOfStudy, setFieldOfStudy] = useState("");
+  const [school, setSchool] = useState("");
 
-  // Mentor form
-  const [uni, setUni] = useState("");
-  const [major, setMajor] = useState("");
-  const [bio, setBio] = useState("");
-  const [slotsRaw, setSlotsRaw] = useState('["2025-10-01T15:00:00"]');
-
-  // Student form
-  const [cc, setCc] = useState("");
-  const [intendedMajor, setIntendedMajor] = useState("");
+  // Student view
   const [targetUni, setTargetUni] = useState("");
-
-  // Mentors search
-  const [searchEmail, setSearchEmail] = useState("");
   const [mentors, setMentors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null); // {type:"success"|"error", msg}
+  const [searched, setSearched] = useState(false);
 
-  const canSubmitMentor = useMemo(
-    () => email && uni && major && slotsRaw,
-    [email, uni, major, slotsRaw]
-  );
-
-  const canSubmitStudent = useMemo(
-    () => email && cc && intendedMajor && targetUni,
-    [email, cc, intendedMajor, targetUni]
-  );
+  const [toast, setToast] = useState(null);
 
   function showToast(type, msg) {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 3000);
   }
 
-  async function createMentorProfile() {
-    // Parse availability JSON safely
-    let available_slots = [];
-    try {
-      const parsed = JSON.parse(slotsRaw || "[]");
-      if (!Array.isArray(parsed))
-        throw new Error("Availability must be an array of ISO strings");
-      available_slots = parsed;
-    } catch (e) {
-      showToast("error", `Invalid availability JSON: ${e.message}`);
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  const handleAuth = async () => {
+    setEmailError("");
+    if (!email || !password) {
+      showToast("error", "Please fill in all fields.");
+      return;
+    }
+    if (authMode === "signup" && !isValidEmail(email)) {
+      setEmailError("Invalid email address");
+      showToast("error", "Please enter a valid email (e.g., name@example.com)");
       return;
     }
 
-    try {
-      const resp = await fetch(`${API}/mentors/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_email: email,
-          university: uni,
-          major,
-          bio,
-          available_slots,
-        }),
-      });
-      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-      showToast("success", "Mentor profile created!");
-    } catch (err) {
-      showToast("error", `Failed to create mentor: ${err.message}`);
-    }
-  }
-
-  async function createStudentProfile() {
-    try {
-      const resp = await fetch(`${API}/students/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_email: email,
-          community_college: cc,
-          intended_major: intendedMajor,
-          target_university: targetUni,
-        }),
-      });
-      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-      showToast("success", "Student profile created!");
-    } catch (err) {
-      showToast("error", `Failed to create student: ${err.message}`);
-    }
-  }
+    showToast("success", authMode === "login" ? "Logged in!" : "Signed up!");
+    setTimeout(() => {
+      if (authMode === "signup" && role === "Mentor") {
+        setPage("mentorDashboard");
+        return;
+      }
+      setPage("main");
+    }, 1000);
+  };
 
   async function findMentors() {
     setLoading(true);
+    setSearched(true);
     setMentors([]);
     try {
-      // Try query by student_email first
-      let url = `${API}/mentors/`;
-      if (searchEmail) {
-        const tryUrl = `${API}/mentors/?student_email=${encodeURIComponent(
-          searchEmail
-        )}`;
-        const tryResp = await fetch(tryUrl);
-        if (tryResp.ok) {
-          const data = await tryResp.json();
-          setMentors(Array.isArray(data) ? data : data.results || []);
-          setLoading(false);
-          return;
-        }
-      }
-      const resp = await fetch(url);
+      const resp = await fetch(`${API}/mentors/`);
       if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
       const data = await resp.json();
       setMentors(Array.isArray(data) ? data : data.results || []);
@@ -326,29 +210,74 @@ export default function App() {
     }
   }
 
-  return (
-    <div  
-        style={{ paddingLeft: "24px" }}
-        className="min-h-screen bg-neutral-50 text-neutral-900">
-      <header className="w-full border-b bg-white">
-        <div className="max-w-5xl mx-auto p-4">
-          <h1 className="text-2xl font-bold">Transfer Peer Connect</h1>
-        </div>
-      </header>
+  const handlePasswordChange = () => {
+    if (!oldPassword || !password) {
+      showToast("error", "Please fill in both password fields.");
+      return;
+    }
+    if (oldPassword !== "password123") {
+      showToast("error", "Old password is incorrect!");
+      return;
+    }
+    showToast("success", "Password changed successfully!");
+    setOldPassword("");
+    setPassword("");
+  };
 
-      <main className="p-4">
-        <Section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label="I am a...">
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full rounded-xl border px-3 py-2"
-              >
-                <option>Student</option>
-                <option>Mentor</option>
-              </select>
-            </Field>
+  // ---------- AUTH PAGE ----------
+  if (page === "auth") {
+    return (
+      <div className="auth-container">
+        <header>
+          <h1>Transfer Peer Connect</h1>
+        </header>
+        <main>
+          <section
+            className="section-container"
+            style={{ maxWidth: "500px", margin: "2rem auto" }}
+          >
+            <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+              {authMode === "login" ? "Login" : "Sign Up"}
+            </h2>
+
+            {authMode === "signup" && (
+              <>
+                <Field label="I am a...">
+                  <select value={role} onChange={(e) => setRole(e.target.value)}>
+                    <option>Student</option>
+                    <option>Mentor</option>
+                  </select>
+                </Field>
+
+                <Field label="Current School">
+                  <select
+                    value={school}
+                    onChange={(e) => setSchool(e.target.value)}
+                  >
+                    <option value="">Select your school…</option>
+                    {NJ_COLLEGES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Field of Study">
+                  <select
+                    value={fieldOfStudy}
+                    onChange={(e) => setFieldOfStudy(e.target.value)}
+                  >
+                    <option value="">Select a field…</option>
+                    {FIELDS_OF_STUDY.map((f) => (
+                      <option key={f} value={f}>
+                        {f}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </>
+            )}
 
             <Field label="Email">
               <Input
@@ -358,113 +287,270 @@ export default function App() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
-          </div>
-        </Section>
-
-        {role === "Mentor" ? (
-          <Section title="Create Mentor Profile">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Current College">
-                <select
-                  value={uni}
-                  onChange={(e) => setUni(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2"
-                >
-                  <option value="">Select a college…</option>
-                  {NJ_COLLEGES.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Field of Study">
-                <select
-                  value={major}
-                  onChange={(e) => setMajor(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2"
-                >
-                  <option value="">Select a field…</option>
-                  {FIELDS_OF_STUDY.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-            <div className="md:col-span-2">
-                <Field label="Bio">
-                  <TextArea
-                    rows={4}
-                    cols={50}
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                  />
-                </Field>
-              </div>
-          </div>
-
-            <div className="mt-4">
-              <Button
-                onClick={createMentorProfile}
-                disabled={!canSubmitMentor}
+            {authMode === "signup" && emailError && (
+              <p
+                style={{
+                  color: "red",
+                  fontSize: "0.9rem",
+                  marginTop: "-0.25rem",
+                  marginBottom: "0.75rem",
+                }}
               >
-                Submit Mentor
+                {emailError}
+              </p>
+            )}
+
+            <Field label="Password">
+              <Input
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Field>
+
+            <div style={{ marginTop: "1.5rem", textAlign: "center" }}>
+              <Button onClick={handleAuth}>
+                {authMode === "login" ? "Login" : "Sign Up"}
               </Button>
             </div>
-          </Section>
-        ) : (
-          <Section title="Create Student Profile">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label="Current College">
-                <select
-                  value={cc}
-                  onChange={(e) => setCc(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2"
-                >
-                  <option value="">Select a college…</option>
-                  {NJ_COLLEGES.map((name) => (
-                    <option key={name} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
 
-              <Field label="Intended Field of Study">
-                <select
-                  value={intendedMajor}
-                  onChange={(e) => setIntendedMajor(e.target.value)}
-                  className="w-full rounded-xl border px-3 py-2"
-                >
-                  <option value="">Select a field…</option>
-                  {FIELDS_OF_STUDY.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
+            <p
+              style={{
+                textAlign: "center",
+                marginTop: "1rem",
+                fontSize: "0.9rem",
+              }}
+            >
+              {authMode === "login" ? (
+                <>
+                  Don’t have an account?{" "}
+                  <span
+                    style={{
+                      color: "#5a5a5a",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                    onClick={() => setAuthMode("signup")}
+                  >
+                    Sign up
+                  </span>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <span
+                    style={{
+                      color: "#5a5a5a",
+                      cursor: "pointer",
+                      fontWeight: 600,
+                    }}
+                    onClick={() => setAuthMode("login")}
+                  >
+                    Login
+                  </span>
+                </>
+              )}
+            </p>
+          </section>
+        </main>
 
-            <div className="mt-4">
-              <Button
-                onClick={createStudentProfile}
-                disabled={!canSubmitStudent}
-              >
-                Submit Student
-              </Button>
-            </div>
-          </Section>
+        {toast && (
+          <div
+            role="status"
+            className={classNames(
+              "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl px-4 py-2 text-sm shadow-lg",
+              toast.type === "success" && "bg-green-600 text-white",
+              toast.type === "error" && "bg-red-600 text-white"
+            )}
+          >
+            {toast.msg}
+          </div>
         )}
+      </div>
+    );
+  }
 
+  // ---------- PROFILE ----------
+  if (page === "profile") {
+    return (
+      <div className="min-h-screen bg-neutral-50 text-neutral-900">
+        <header className="w-full border-b bg-white">
+          <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Profile</h1>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  setPage(role === "Mentor" ? "mentorDashboard" : "main")
+                }
+              >
+                Back
+              </Button>
+              <Button variant="outline" onClick={() => setPage("auth")}>
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-4">
+          <Section title="Edit Profile">
+            <Field label="Email">
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Field>
+
+            <Field label="Role">
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option>Student</option>
+                <option>Mentor</option>
+              </select>
+            </Field>
+
+            <Field label="Field of Study">
+              <select
+                value={fieldOfStudy}
+                onChange={(e) => setFieldOfStudy(e.target.value)}
+              >
+                <option value="">Select a field…</option>
+                {FIELDS_OF_STUDY.map((f) => (
+                  <option key={f} value={f}>
+                    {f}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Current School">
+              <select value={school} onChange={(e) => setSchool(e.target.value)}>
+                <option value="">Select your school…</option>
+                {NJ_COLLEGES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Button onClick={() => showToast("success", "Profile updated!")}>
+              Save Changes
+            </Button>
+          </Section>
+
+          <Section title="Change Password">
+            <Field label="Old Password">
+              <Input
+                type="password"
+                placeholder="Enter old password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+              />
+            </Field>
+
+            <Field label="New Password">
+              <Input
+                type="password"
+                placeholder="Enter new password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Field>
+
+            <Button onClick={handlePasswordChange}>Change Password</Button>
+          </Section>
+        </main>
+
+        {toast && (
+          <div
+            role="status"
+            className={classNames(
+              "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl px-4 py-2 text-sm shadow-lg",
+              toast.type === "success" && "bg-green-600 text-white",
+              toast.type === "error" && "bg-red-600 text-white"
+            )}
+          >
+            {toast.msg}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- MENTOR DASHBOARD ----------
+  if (page === "mentorDashboard") {
+    return (
+      <div className="min-h-screen bg-neutral-50 text-neutral-900">
+        <header className="w-full border-b bg-white">
+          <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+            <h1 className="text-2xl font-bold">Mentor Dashboard</h1>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={() => setPage("profile")}>
+                Profile
+              </Button>
+              <Button variant="outline" onClick={() => setPage("auth")}>
+                Logout
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="p-4">
+          <Section title="Welcome, Mentor!">
+            <p>
+              Here you’ll be able to manage your sessions, update your bio, and
+              connect with students soon.
+            </p>
+          </Section>
+        </main>
+
+        {toast && (
+          <div
+            role="status"
+            className={classNames(
+              "fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl px-4 py-2 text-sm shadow-lg",
+              toast.type === "success" && "bg-green-600 text-white",
+              toast.type === "error" && "bg-red-600 text-white"
+            )}
+          >
+            {toast.msg}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ---------- STUDENT MAIN ----------
+  return (
+    <div className="min-h-screen bg-neutral-50 text-neutral-900">
+      <header className="w-full border-b bg-white">
+        <div className="max-w-5xl mx-auto p-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Transfer Peer Connect</h1>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setPage("profile")}
+              className="profile-nudge"
+              >
+              Profile
+            </Button>
+
+            <Button variant="outline" onClick={() => setPage("auth")}>
+              Logout
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="p-4">
         <Section
           title="Find Mentors"
           right={
             <div className="flex items-center gap-2">
-            <Field label="Target University">
+              <Field label="Target University">
                 <select
                   value={targetUni}
                   onChange={(e) => setTargetUni(e.target.value)}
@@ -477,25 +563,13 @@ export default function App() {
                     </option>
                   ))}
                 </select>
-            </Field>
+              </Field>
               <Button onClick={findMentors}>
                 {loading ? "Searching..." : "Search"}
               </Button>
-              
             </div>
-            
           }
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <Field label="Student email to search for (optional)">
-              <Input
-                placeholder="student@example.edu"
-                value={searchEmail}
-                onChange={(e) => setSearchEmail(e.target.value)}
-              />
-            </Field>
-          </div>
-
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mentors.map((m) => (
               <MentorCard
@@ -503,17 +577,17 @@ export default function App() {
                 mentor={m}
               />
             ))}
-            {!loading && mentors.length === 0 && (
-              <p className="text-sm text-black/60">
-                No mentors yet. Try searching or create some mentor profiles
-                first.
-              </p>
-            )}
           </div>
+
+          {!loading && mentors.length === 0 && searched && (
+            <p className="text-sm text-black/60 mt-2">
+              No mentors yet. Try searching or create some mentor profiles
+              first.
+            </p>
+          )}
         </Section>
       </main>
 
-      {/* Toast */}
       {toast && (
         <div
           role="status"
@@ -526,10 +600,6 @@ export default function App() {
           {toast.msg}
         </div>
       )}
-
-      <footer className="p-6 text-center text-xs text-black/60">
-        API base: <code>{API}</code>
-      </footer>
     </div>
   );
 }

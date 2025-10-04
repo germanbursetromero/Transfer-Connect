@@ -1,38 +1,229 @@
-.App {
-  text-align: center;
+/* ====== GLOBAL STYLES ====== */
+body {
+  font-family: "Inter", system-ui, sans-serif;
+  background-color: #d8bd83;
+  color: #242727;
+  margin: 0;
+  padding: 0;
+  transform: scale(0.95); /* less zoom-out than before */
+  transform-origin: top center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+main {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 2rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+/* ====== HEADER ====== */
+header {
+  background-color: #bb905f;
+  border-bottom: 1px solid #556d44;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  border-radius: 0 0 1rem 1rem;
+  padding: 2rem 3rem; /* more spacing */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h1 {
+  font-size: 1.9rem; 
+  font-weight: 700;
+  color: #2d3436;
+  margin: 0;
+}
+
+header .max-w-5xl {
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ====== SECTIONS ====== */
+section {
+  margin-top: 2rem;
+}
+
+.section-container {
+  background: #fefefe;
+  border-radius: 1.5rem;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.75rem 2rem;
+  border: 1px solid #e0e0e0;
+}
+
+/* ====== FORM ELEMENTS ====== */
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  font-size: 1rem;
+  border: 1px solid #c5c8c6;
+  border-radius: 1.25rem;
+  outline: none;
+  background-color: #f8f9fa;
+  color: #333;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #7d8c84;
+  box-shadow: 0 0 6px rgba(125, 140, 132, 0.3);
+}
+
+/* ====== FORCE BIGGER FIELD LABELS EVEN WITH INLINE STYLES ====== */
+.section-container label > span:first-child,
+main label > span:first-child {
+  font-size: 1.5rem !important;   /* bigger "I am a..." */
+  font-weight: 600 !important;
+  color: #585541 !important;
+  margin-bottom: 0.4rem !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* ====== BUTTONS ====== */
+button {
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+button.bg-black {
+  background-color: #5a5a5a;
+  color: #fefefe;
+}
+
+button.bg-black:hover {
+  background-color: #474747;
+}
+
+/* ====== MENTOR CARDS ====== */
+.mentor-card {
+  background: #fefefe;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.08);
+  border: 1px solid #dcdcdc;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mentor-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.mentor-card img {
+  width: 100%;
+  height: 190px;
+  object-fit: cover;
+  border-radius: 1.25rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mentor-card h4 {
+  font-weight: 600;
+  margin: 0;
+  color: #2d2d2d;
+  font-size: 1.1rem;
+}
+
+.mentor-card p {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* ====== GRID & LAYOUT ====== */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.grid-cols-2 {
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
   }
 }
 
-.App-header {
-  background-color: #282c34;
+/* ====== TOASTS ====== */
+.toast {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.85rem 1.4rem;
+  border-radius: 1.25rem;
+  color: white;
+  font-size: 1rem;
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.toast.success {
+  background-color: #7ba57d;
+}
+
+.toast.error {
+  background-color: #b55b5b;
+}
+
+/* ====== AUTH PAGE ====== */
+.auth-container {
   min-height: 100vh;
+  background-color: #d8bd83;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  justify-content: start;
+  padding-top: 5rem;
 }
 
-.App-link {
-  color: #61dafb;
+.auth-container header {
+  background-color: #bb905f;
+  color: #2d3436;
+  border-radius: 0 0 1rem 1rem;
+  padding: 1.5rem 3rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  width: 100%;
+  text-align: center;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.auth-container main {
+  width: 100%;
 }
+
+.auth-container h1 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.auth-container button {
+  background-color: #5a5a5a;
+  color: #fff;
+}
+
+.auth-container button:hover {
+  background-color: #3d3d3d;
+}
+
+.profile-nudge { transform: translateX(-10px); }
