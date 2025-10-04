@@ -31,7 +31,6 @@ class Student(Base):
     id = Column(Integer, primary_key=True, index=True)
     college = Column(String)
     intended_area_of_study = Column(String)
-    target_university = Column(String)
     user_id = Column(Integer, ForeignKey("users.id"))
 
     user = relationship("User", back_populates="students")
