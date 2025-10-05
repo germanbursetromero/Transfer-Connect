@@ -129,20 +129,21 @@ function MentorCard({ mentor }) {
   return (
     <div className="rounded-2xl border p-4 shadow-sm bg-white flex flex-col">
       <img
-        src={mentor.photo_url || "https://via.placeholder.com/300x160"}
+        src="https://via.placeholder.com/300x160"
         alt={mentor.name}
         className="w-full aspect-[3/2] object-cover rounded-xl mb-3"
       />
       <h4 className="text-lg font-semibold">
-        {mentor.university} — {mentor.area_of_study}
+        {mentor.name} ({mentor.email})
       </h4>
       <p className="text-sm text-black/70">
-        {mentor.university} — {mentor.major}
+        {mentor.university} — {mentor.area_of_study}
       </p>
       {mentor.bio && <p className="text-sm mt-2 line-clamp-3">{mentor.bio}</p>}
     </div>
   );
 }
+
 
 export default function App() {
   const [page, setPage] = useState("auth");
@@ -193,7 +194,7 @@ export default function App() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: email.split("@")[0],   // temporary, adjust if you add name field
+        name: email.split("@")[0],
         email,
         password,
         role,
@@ -201,10 +202,13 @@ export default function App() {
         area_of_study: fieldOfStudy,
       }),
     });
-    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-    const data = await resp.json();
 
-    // ✅ Save the logged-in user id
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.detail || `${resp.status} ${resp.statusText}`);
+    }
+
+    const data = await resp.json();
     setUserId(data.id);
 
     showToast("success", authMode === "login" ? "Logged in!" : "Signed up!");
@@ -226,9 +230,20 @@ export default function App() {
   setMentors([]);
   try {
     if (!userId) throw new Error("No user logged in");
+    if (!targetUni) throw new Error("Please select a university.");
 
-    const resp = await fetch(
-    );
+    const updateResp = await fetch(`${API}/update_desired_school/${userId}`, {
+  method: "PUT",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ desired_school: targetUni }),
+  });
+  if (!updateResp.ok) throw new Error("Failed to update desired school");
+
+  // ✅ wait for the backend to fully commit before searching mentors
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  const resp = await fetch(`${API}/matches/${userId}`);
+
     if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
     const data = await resp.json();
     setMentors(Array.isArray(data) ? data : []);
@@ -238,6 +253,8 @@ export default function App() {
     setLoading(false);
   }
 }
+
+
 
 
   const handlePasswordChange = () => {
@@ -466,9 +483,29 @@ export default function App() {
               </select>
             </Field>
 
-            <Button onClick={() => showToast("success", "Profile updated!")}>
+            <Button
+              onClick={async () => {
+                try {
+                  const resp = await fetch(`${API}/update_profile/${userId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      email,
+                      role,
+                      school,
+                      field_of_study: fieldOfStudy,
+                    }),
+                  });
+                  if (!resp.ok) throw new Error("Failed to update profile");
+                  showToast("success", "Profile updated!");
+                } catch (err) {
+                  showToast("error", err.message);
+                }
+              }}
+            >
               Save Changes
             </Button>
+
           </Section>
 
           <Section title="Change Password">

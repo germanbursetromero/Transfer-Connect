@@ -1,16 +1,33 @@
+# backend/main.py
 from fastapi import FastAPI, Depends, Body, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from backend.database import Base, engine, SessionLocal
 from backend import models
 from backend.matching import find_matches
 
-# Create the database tables
+# ✅ Create database tables
 Base.metadata.create_all(bind=engine)
-
-# Create the FastAPI app instance
 app = FastAPI()
 
-# Dependency to get DB session
+# ✅ Allow React frontend
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ✅ Database session dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -18,29 +35,11 @@ def get_db():
     finally:
         db.close()
 
-# Root endpoint
 @app.get("/")
 def root():
     return {"message": "Hello, Transfer Connect!"}
 
-# A simple test endpoint
-@app.get("/ping")
-def ping():
-    return {"status": "ok", "message": "pong"}
-
-# get all users
-@app.get("/users")
-def get_users(db: Session = Depends(get_db)):
-    users = db.query(models.User).all()
-    return users
-
-# get specific user
-@app.get("/users/{users_id}")
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    return user
-
-# sign up user
+# ✅ SIGNUP
 @app.post("/signup")
 def signup(
     name: str = Body(...),
@@ -50,8 +49,7 @@ def signup(
     school: str = Body(None),
     area_of_study: str = Body(None),
     db: Session = Depends(get_db)
-    ):
-    # check if email already exists
+):
     if db.query(models.User).filter(models.User.email == email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -60,7 +58,7 @@ def signup(
     db.commit()
     db.refresh(new_user)
 
-    if role.lower() == "mentor":
+    if role and role.lower() == "mentor":
         mentor = models.Mentor(
             university=school,
             area_of_study=area_of_study,
@@ -68,9 +66,11 @@ def signup(
             user_id=new_user.id,
         )
         db.add(mentor)
-    elif role.lower() == "student":
+    elif role and role.lower() == "student":
         student = models.Student(
-            school=school,
+            college=school,
+            intended_area_of_study=area_of_study,
+            desired_school=None,
             user_id=new_user.id,
         )
         db.add(student)
@@ -78,20 +78,114 @@ def signup(
     db.commit()
     return {"id": new_user.id, "email": new_user.email, "role": new_user.role}
 
-# login user
+# ✅ LOGIN
 @app.post("/login")
 def login(email: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
-    user = db.query(models.user).filter(models.User.email == email).first()
+    user = db.query(models.User).filter(models.User.email == email).first()
     if not user or user.password != password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    return {"id": user.id, "email": user.email, "role":user.role}
+    return {"id": user.id, "email": user.email, "role": user.role}
 
-# New endpoint to run algortihm
+# ✅ UPDATE PROFILE
+@app.put("/update_profile/{user_id}")
+def update_profile(
+    user_id: int,
+    email: str = Body(None),
+    role: str = Body(None),
+    school: str = Body(None),
+    field_of_study: str = Body(None),
+    db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if email:
+        user.email = email
+    if role:
+        user.role = role
+
+    # Handle role logic safely
+    role_lower = role.lower() if role else None
+
+    if role_lower == "mentor":
+        student = db.query(models.Student).filter(models.Student.user_id == user_id).first()
+        if student:
+            db.delete(student)
+        mentor = db.query(models.Mentor).filter(models.Mentor.user_id == user_id).first()
+        if not mentor:
+            mentor = models.Mentor(user_id=user_id)
+            db.add(mentor)
+        if school:
+            mentor.university = school
+        if field_of_study:
+            mentor.area_of_study = field_of_study
+
+    elif role_lower == "student":
+        mentor = db.query(models.Mentor).filter(models.Mentor.user_id == user_id).first()
+        if mentor:
+            db.delete(mentor)
+        student = db.query(models.Student).filter(models.Student.user_id == user_id).first()
+        if not student:
+            student = models.Student(user_id=user_id)
+            db.add(student)
+        if school:
+            student.college = school
+        if field_of_study:
+            student.intended_area_of_study = field_of_study
+
+    db.commit()
+    return {"status": "success", "message": "Profile updated"}
+
+# ✅ MODEL for updating desired school
+class DesiredSchoolUpdate(BaseModel):
+    desired_school: str
+
+# ✅ UPDATE desired school
+@app.put("/update_desired_school/{user_id}")
+def update_desired_school(
+    user_id: int,
+    update: DesiredSchoolUpdate,
+    db: Session = Depends(get_db)
+):
+    student = db.query(models.Student).filter(models.Student.user_id == user_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    student.desired_school = update.desired_school
+    db.commit()
+    db.refresh(student)
+
+    return {"status": "success", "desired_school": student.desired_school}
+
+# ✅ MATCHES
 @app.get("/matches/{student_id}")
-def get_matches(student_id:int, db: Session = Depends(get_db)):
-    student = db.query(models.Student).filter(models.Student.id == student_id).first()
-    return find_matches(db, 
-                        student_id, 
-                        student.desired_school, 
-                        student.intended_area_of_study,
-                        student.college)
+@app.get("/matches/{student_id}")
+def get_matches(student_id: int, db: Session = Depends(get_db)):
+    student = db.query(models.Student).filter(models.Student.user_id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    matches = find_matches(
+        db,
+        student_id,
+        desired_university=student.desired_school or "",
+        intended_area_of_study=student.intended_area_of_study or "",
+        college=student.college or "",
+    )
+
+    # ✅ Include mentor user info
+    formatted = []
+    for mentor in matches:
+        user = db.query(models.User).filter(models.User.id == mentor.user_id).first()
+        formatted.append({
+            "id": mentor.id,
+            "university": mentor.university,
+            "area_of_study": mentor.area_of_study,
+            "bio": mentor.bio,
+            "name": user.name if user else "Unknown",
+            "email": user.email if user else "Unknown",
+        })
+
+    return formatted
+
