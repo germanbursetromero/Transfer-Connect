@@ -1,4 +1,6 @@
-# backend/matching.py
+# matching.py - algorithm which matches students with mentors based off desired school 
+# and ranks them based off area of studuy and previous school
+
 from sqlalchemy.orm import Session
 from . import models
 from sqlalchemy import func
@@ -8,12 +10,12 @@ def find_matches(db: Session, student_id: int, desired_university: str, intended
     Returns mentors at or related to the student's desired university,
     ranked by how well they match the student's area of study and prior school.
     """
-    # ✅ Normalize safely
+    # normalize safely
     desired_university = (desired_university or "").strip().lower()
     intended_area_of_study = (intended_area_of_study or "").strip().lower()
     college = (college or "").strip().lower()
 
-    # ✅ Use partial, case-insensitive match for university
+    # use partial, case-insensitive match for university
     mentors = db.query(models.Mentor).filter(
         func.lower(models.Mentor.university).like(f"%{desired_university}%")
     ).all()
@@ -29,16 +31,16 @@ def find_matches(db: Session, student_id: int, desired_university: str, intended
         mentor_prev = (getattr(mentor, "previous_school", "") or "").lower()
         student_college = (student.college or "").lower()
 
-        # ✅ Boost score for matching area of study
+        # boost score for matching area of study
         if mentor_area and intended_area_of_study and mentor_area == intended_area_of_study:
             score += 2
 
-        # ✅ Boost score for having transferred from the same college
+        # boost score for having transferred from the same college
         if mentor_prev and student_college and mentor_prev == student_college:
             score += 1
 
         ranked.append((score, mentor))
 
-    # ✅ Sort by highest score first
+    # sort by highest score first
     ranked.sort(key=lambda x: x[0], reverse=True)
     return [mentor for score, mentor in ranked]

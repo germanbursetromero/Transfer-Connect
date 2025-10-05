@@ -1,3 +1,7 @@
+// App.js — Core React component for Transfer Connect
+// Provides login/signup, profile management, role selection (Student or Mentor),
+// and mentor matching functionality with state managed in React hooks
+
 import React, { useMemo, useState, useEffect } from "react";
 import "./App.css";
 

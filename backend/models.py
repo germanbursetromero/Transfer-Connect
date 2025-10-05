@@ -1,3 +1,5 @@
+# models.py — defines the database models (User, Mentor, Student) and their relationships
+
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from .database import Base

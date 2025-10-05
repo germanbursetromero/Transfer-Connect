@@ -1,4 +1,5 @@
-# backend/main.py
+# main.py — API entrypoint connecting the app with the database
+
 from fastapi import FastAPI, Depends, Body, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -7,11 +8,11 @@ from backend.database import Base, engine, SessionLocal
 from backend import models
 from backend.matching import find_matches
 
-# Create database tables
+# create database tables
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-# Allow React frontend
+# allow React frontend
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -27,7 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database session dependency
+# database session dependency
 def get_db():
     db = SessionLocal()
     try:
@@ -40,7 +41,7 @@ def root():
     return {"message": "Hello, Transfer Connect!"}
 
 
-# ✅ SIGNUP (now takes full name)
+# signup
 @app.post("/signup")
 def signup(
     name: str = Body(...),
@@ -83,14 +84,15 @@ def signup(
     return {"id": new_user.id, "email": new_user.email, "role": new_user.role}
 
 
-# ✅ LOGIN
+# login
 @app.post("/login")
 def login(email: str = Body(...), password: str = Body(...), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user or user.password != password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     return {"id": user.id, "email": user.email, "role": user.role}
-# ✅ GET USER PROFILE
+
+# get user profile
 @app.get("/profile/{user_id}")
 def get_profile(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -124,7 +126,7 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
     return profile_data
 
 
-# ✅ UPDATE PROFILE (adds bio + previous school support)
+# update profile
 @app.put("/update_profile/{user_id}")
 def update_profile(
     user_id: int,
@@ -185,12 +187,12 @@ def update_profile(
     return {"status": "success", "message": "Profile updated"}
 
 
-# ✅ MODEL for updating desired school
+# model for updating desired school
 class DesiredSchoolUpdate(BaseModel):
     desired_school: str
 
 
-# ✅ UPDATE desired school
+# update desired school
 @app.put("/update_desired_school/{user_id}")
 def update_desired_school(
     user_id: int,
@@ -208,7 +210,7 @@ def update_desired_school(
     return {"status": "success", "desired_school": student.desired_school}
 
 
-# ✅ MATCHES (includes mentor info)
+# get student's matches
 @app.get("/matches/{student_id}")
 def get_matches(student_id: int, db: Session = Depends(get_db)):
     student = db.query(models.Student).filter(models.Student.user_id == student_id).first()

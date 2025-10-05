@@ -1,3 +1,5 @@
+# security.py - encrypts users' passwords
+
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
