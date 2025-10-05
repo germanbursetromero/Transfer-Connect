@@ -1,6 +1,6 @@
-# Transfer Connect
+# Transfer Peer Connect
 
-## 🚀 Transfer Connect makes the transfer journey smoother by linking students with mentors who’ve already navigated the path to their dream school
+## 🚀 Transfer Peer Connect makes the transfer journey smoother by linking students with mentors who’ve already navigated the path to their dream school
 
 ### 👩‍🎓 Students can:
 
