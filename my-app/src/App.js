@@ -61,8 +61,6 @@ function classNames(...xs) {
   return xs.filter(Boolean).join(" ");
 }
 
-
-
 function Section({ title, children, right }) {
   return (
     <section className="w-full max-w-5xl mx-auto my-6">
@@ -127,12 +125,7 @@ function Button({ variant = "solid", children, className, ...rest }) {
 
 function MentorCard({ mentor }) {
   return (
-    <div className="rounded-2xl border p-4 shadow-sm bg-white flex flex-col">
-      <img
-        src="https://via.placeholder.com/300x160"
-        alt={mentor.name}
-        className="w-full aspect-[3/2] object-cover rounded-xl mb-3"
-      />
+    <div>
       <h4 className="text-lg font-semibold">
         {mentor.name} ({mentor.email})
       </h4>
@@ -144,20 +137,22 @@ function MentorCard({ mentor }) {
   );
 }
 
-
 export default function App() {
   const [page, setPage] = useState("auth");
   const [authMode, setAuthMode] = useState("login");
   const [userId, setUserId] = useState(null);
 
-  // Auth + profile
+  // Auth + profile state
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
   const [role, setRole] = useState("Student");
   const [fieldOfStudy, setFieldOfStudy] = useState("");
   const [school, setSchool] = useState("");
+  const [bio, setBio] = useState("");
+  const [previousSchool, setPreviousSchool] = useState("");
+  const [name, setName] = useState("");
+
 
   // Student view
   const [targetUni, setTargetUni] = useState("");
@@ -177,98 +172,106 @@ export default function App() {
   }
 
   const handleAuth = async () => {
-  setEmailError("");
-  if (!email || !password) {
-    showToast("error", "Please fill in all fields.");
-    return;
-  }
-  if (authMode === "signup" && !isValidEmail(email)) {
-    setEmailError("Invalid email address");
-    showToast("error", "Please enter a valid email (e.g., name@example.com)");
-    return;
-  }
-
-  try {
-    const url = authMode === "login" ? `${API}/login` : `${API}/signup`;
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: email.split("@")[0],
-        email,
-        password,
-        role,
-        school,
-        area_of_study: fieldOfStudy,
-      }),
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.detail || `${resp.status} ${resp.statusText}`);
+    setEmailError("");
+    if (!email || !password) {
+      showToast("error", "Please fill in all fields.");
+      return;
+    }
+    if (authMode === "signup" && !isValidEmail(email)) {
+      setEmailError("Invalid email address");
+      showToast("error", "Please enter a valid email (e.g., name@example.com)");
+      return;
     }
 
-    const data = await resp.json();
-    setUserId(data.id);
+    try {
+      const url = authMode === "login" ? `${API}/login` : `${API}/signup`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          school,
+          previous_school: previousSchool,
+          area_of_study: fieldOfStudy,
+        }),
+      });
 
-    showToast("success", authMode === "login" ? "Logged in!" : "Signed up!");
-    setTimeout(() => {
-      if (authMode === "signup" && role === "Mentor") {
-        setPage("mentorDashboard");
-        return;
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || `${resp.status} ${resp.statusText}`);
       }
-      setPage("main");
-    }, 1000);
-  } catch (err) {
-    showToast("error", `Auth failed: ${err.message}`);
-  }
-};
+
+      const data = await resp.json();
+      setUserId(data.id);
+      setRole(data.role || role);
+
+      showToast("success", authMode === "login" ? "Logged in!" : "Signed up!");
+
+      // Route correctly after auth
+      setTimeout(() => {
+        const effectiveRole = (data.role || role || "").toLowerCase();
+        if (effectiveRole === "mentor") {
+          setPage("mentorDashboard");
+        } else {
+          setPage("main");
+        }
+      }, 600);
+    } catch (err) {
+      showToast("error", `Auth failed: ${err.message}`);
+    }
+  };
+
+  // Pre-fill profile fields when visiting Profile page
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (page !== "profile" || !userId) return;
+      try {
+        const resp = await fetch(`${API}/profile/${userId}`);
+        if (!resp.ok) throw new Error("Failed to load profile");
+        const p = await resp.json();
+        setEmail(p.email || "");
+        setName(p.name || "")
+        setRole(p.role || "Student");
+        setSchool(p.school || "");
+        setFieldOfStudy(p.field_of_study || "");
+        setBio(p.bio || "");
+        setPreviousSchool(p.previous_school || "");
+      } catch (e) {
+        showToast("error", e.message);
+      }
+    };
+    loadProfile();
+  }, [page, userId]);
 
   async function findMentors() {
-  setLoading(true);
-  setSearched(true);
-  setMentors([]);
-  try {
-    if (!userId) throw new Error("No user logged in");
-    if (!targetUni) throw new Error("Please select a university.");
+    setLoading(true);
+    setSearched(true);
+    setMentors([]);
+    try {
+      if (!userId) throw new Error("No user logged in");
+      if (!targetUni) throw new Error("Please select a university.");
 
-    const updateResp = await fetch(`${API}/update_desired_school/${userId}`, {
-  method: "PUT",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ desired_school: targetUni }),
-  });
-  if (!updateResp.ok) throw new Error("Failed to update desired school");
+      const updateResp = await fetch(`${API}/update_desired_school/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ desired_school: targetUni }),
+      });
+      if (!updateResp.ok) throw new Error("Failed to update desired school");
 
-  // ✅ wait for the backend to fully commit before searching mentors
-  await new Promise((resolve) => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 250));
 
-  const resp = await fetch(`${API}/matches/${userId}`);
-
-    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-    const data = await resp.json();
-    setMentors(Array.isArray(data) ? data : []);
-  } catch (err) {
-    showToast("error", `Failed to load mentors: ${err.message}`);
-  } finally {
-    setLoading(false);
-  }
-}
-
-
-
-
-  const handlePasswordChange = () => {
-    if (!oldPassword || !password) {
-      showToast("error", "Please fill in both password fields.");
-      return;
+      const resp = await fetch(`${API}/matches/${userId}`);
+      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+      const data = await resp.json();
+      setMentors(Array.isArray(data) ? data : []);
+    } catch (err) {
+      showToast("error", `Failed to load mentors: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
-    if (oldPassword !== "password123") {
-      showToast("error", "Old password is incorrect!");
-      return;
-    }
-    showToast("success", "Password changed successfully!");
-    setOldPassword("");
-    setPassword("");
   };
 
   // ---------- AUTH PAGE ----------
@@ -283,19 +286,45 @@ export default function App() {
             className="section-container"
             style={{ maxWidth: "500px", margin: "2rem auto" }}
           >
-            <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-              {authMode === "login" ? "Login" : "Sign Up"}
-            </h2>
+           
 
             {authMode === "signup" && (
               <>
+
+               <h2 style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+              {authMode === "login" ? "Login" : "Sign Up"}
+                </h2>
+                <Field label="Full Name">
+                  <Input
+                    type="text"
+                    placeholder="Your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </Field>
                 <Field label="I am a...">
                   <select value={role} onChange={(e) => setRole(e.target.value)}>
                     <option>Student</option>
                     <option>Mentor</option>
                   </select>
                 </Field>
-
+                {role === "Mentor" && (
+              <>
+                <Field label="Previous School">
+                  <select
+                    value={previousSchool}
+                    onChange={(e) => setPreviousSchool(e.target.value)}
+                  >
+                    <option value="">Select your previous school…</option>
+                    {NJ_COLLEGES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </>
+              )}
                 <Field label="Current School">
                   <select
                     value={school}
@@ -451,10 +480,29 @@ export default function App() {
               />
             </Field>
 
+            <Field label = "Name">
+              <Input
+                type="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </Field>
+
             <Field label="Role">
               <select value={role} onChange={(e) => setRole(e.target.value)}>
                 <option>Student</option>
                 <option>Mentor</option>
+              </select>
+            </Field>
+
+            <Field label={role === "Mentor" ? "Current University" : "Current School"}>
+              <select value={school} onChange={(e) => setSchool(e.target.value)}>
+                <option value="">Select your school…</option>
+                {NJ_COLLEGES.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </Field>
 
@@ -472,16 +520,33 @@ export default function App() {
               </select>
             </Field>
 
-            <Field label="Current School">
-              <select value={school} onChange={(e) => setSchool(e.target.value)}>
-                <option value="">Select your school…</option>
-                {NJ_COLLEGES.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            {role === "Mentor" && (
+              <>
+                <Field label="Previous School (pre-transfer)">
+                  <select
+                    value={previousSchool}
+                    onChange={(e) => setPreviousSchool(e.target.value)}
+                  >
+                    <option value="">Select your previous school…</option>
+                    {NJ_COLLEGES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field label="Bio">
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/10"
+                    placeholder="Tell students about your transfer journey, tips, and interests..."
+                  />
+                </Field>
+              </>
+            )}
 
             <Button
               onClick={async () => {
@@ -491,9 +556,12 @@ export default function App() {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       email,
+                      name,
                       role,
                       school,
                       field_of_study: fieldOfStudy,
+                      bio,
+                      previous_school: previousSchool,
                     }),
                   });
                   if (!resp.ok) throw new Error("Failed to update profile");
@@ -505,30 +573,8 @@ export default function App() {
             >
               Save Changes
             </Button>
-
           </Section>
 
-          <Section title="Change Password">
-            <Field label="Old Password">
-              <Input
-                type="password"
-                placeholder="Enter old password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-              />
-            </Field>
-
-            <Field label="New Password">
-              <Input
-                type="password"
-                placeholder="Enter new password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </Field>
-
-            <Button onClick={handlePasswordChange}>Change Password</Button>
-          </Section>
         </main>
 
         {toast && (
@@ -568,8 +614,9 @@ export default function App() {
         <main className="p-4">
           <Section title="Welcome, Mentor!">
             <p>
-              Here you’ll be able to manage your sessions, update your bio, and
-              connect with students soon.
+              We don't currently have a dashboard :/ 
+              In the future you will be able to see students who want to connect.
+              For now check your email.
             </p>
           </Section>
         </main>
@@ -601,7 +648,7 @@ export default function App() {
               variant="outline"
               onClick={() => setPage("profile")}
               className="profile-nudge"
-              >
+            >
               Profile
             </Button>
 
@@ -639,17 +686,12 @@ export default function App() {
         >
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mentors.map((m) => (
-              <MentorCard
-                key={m.id ?? m.user_email ?? Math.random()}
-                mentor={m}
-              />
+              <MentorCard key={m.id ?? m.email ?? Math.random()} mentor={m} />
             ))}
           </div>
 
           {!loading && mentors.length === 0 && searched && (
-            <p className="text-sm text-black/60 mt-2">
-              No mentors yet.
-            </p>
+            <p className="text-sm text-black/60 mt-2">No mentors yet.</p>
           )}
         </Section>
       </main>
