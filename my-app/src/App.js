@@ -648,8 +648,7 @@ export default function App() {
 
           {!loading && mentors.length === 0 && searched && (
             <p className="text-sm text-black/60 mt-2">
-              No mentors yet. Try searching or create some mentor profiles
-              first.
+              No mentors yet.
             </p>
           )}
         </Section>
