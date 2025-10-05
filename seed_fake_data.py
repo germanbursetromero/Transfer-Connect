@@ -116,19 +116,19 @@ def signup_fake_user():
         r = requests.post(f"{API_BASE}/signup", json=payload)
         if r.status_code == 200:
             data = r.json()
-            print(f"✅ Created {role}: {data['email']} ({school}, {field})")
+            print(f"Created {role}: {data['email']} ({school}, {field})")
             return data
         else:
-            print(f"❌ Failed ({r.status_code}): {r.text}")
+            print(f"Failed ({r.status_code}): {r.text}")
     except Exception as e:
         print(f"⚠️ Error: {e}")
 
 def main():
-    print("🚀 Seeding fake users...")
+    print("-->Seeding fake users...")
     for _ in range(300):
         signup_fake_user()
 
-    print("🎉 Done seeding demo data!")
+    print("-->Done seeding demo data!")
 
 if __name__ == "__main__":
     main()
