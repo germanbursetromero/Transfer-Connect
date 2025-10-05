@@ -1,6 +1,6 @@
 # Transfer Connect
 
-## 🚀 Transfer Connect makes the transfer journey smoother by linking students with mentors who’ve already navigated the path to their dream school.
+## 🚀 Transfer Connect makes the transfer journey smoother by linking students with mentors who’ve already navigated the path to their dream school
 
 ### 👩‍🎓 Students can:
 
@@ -31,4 +31,4 @@ Our system doesn’t just list mentors randomly. It ranks them based on how well
 
 The better the match, the higher they appear — giving students the most relevant guidance first.
 
-## 💬 Think of Transfer Connect as a bridge between “where you are” and “where you’re going”, powered by real stories and shared experiences.
+## 💬 Transfer Connect acts as a bridge between “where you are” and “where you’re going”, powered by real stories and shared experiences
