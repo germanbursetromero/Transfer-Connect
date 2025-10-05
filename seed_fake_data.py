@@ -121,7 +121,7 @@ def signup_fake_user():
         else:
             print(f"Failed ({r.status_code}): {r.text}")
     except Exception as e:
-        print(f"⚠️ Error: {e}")
+        print(f"Error: {e}")
 
 def main():
     print("-->Seeding fake users...")
