@@ -125,7 +125,7 @@ def signup_fake_user():
 
 def main():
     print("🚀 Seeding fake users...")
-    for _ in range(100):
+    for _ in range(300):
         signup_fake_user()
 
     print("🎉 Done seeding demo data!")
