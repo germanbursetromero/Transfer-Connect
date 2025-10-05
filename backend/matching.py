@@ -6,7 +6,6 @@ def find_matches(db: Session, student_id: int, desired_university: str, intended
     """
     Returns the mentors that match the student's info ranked by how well they match
     """
-
     # get mentors at chosen university
     mentors = db.query(models.Mentor).filter(func.lower(models.Mentor.university) == desired_university.lower()).all()
 

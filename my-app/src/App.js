@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import "./App.css";
 
 const API = import.meta?.env?.VITE_API_BASE ?? "http://127.0.0.1:8000";
@@ -60,6 +60,8 @@ const NJ_COLLEGES = [
 function classNames(...xs) {
   return xs.filter(Boolean).join(" ");
 }
+
+
 
 function Section({ title, children, right }) {
   return (
@@ -132,7 +134,7 @@ function MentorCard({ mentor }) {
         className="w-full aspect-[3/2] object-cover rounded-xl mb-3"
       />
       <h4 className="text-lg font-semibold">
-        {mentor.name || `Mentor #${mentor.id}`}
+        {mentor.university} — {mentor.area_of_study}
       </h4>
       <p className="text-sm text-black/70">
         {mentor.university} — {mentor.major}
@@ -145,6 +147,7 @@ function MentorCard({ mentor }) {
 export default function App() {
   const [page, setPage] = useState("auth");
   const [authMode, setAuthMode] = useState("login");
+  const [userId, setUserId] = useState(null);
 
   // Auth + profile
   const [email, setEmail] = useState("");
@@ -173,16 +176,36 @@ export default function App() {
   }
 
   const handleAuth = async () => {
-    setEmailError("");
-    if (!email || !password) {
-      showToast("error", "Please fill in all fields.");
-      return;
-    }
-    if (authMode === "signup" && !isValidEmail(email)) {
-      setEmailError("Invalid email address");
-      showToast("error", "Please enter a valid email (e.g., name@example.com)");
-      return;
-    }
+  setEmailError("");
+  if (!email || !password) {
+    showToast("error", "Please fill in all fields.");
+    return;
+  }
+  if (authMode === "signup" && !isValidEmail(email)) {
+    setEmailError("Invalid email address");
+    showToast("error", "Please enter a valid email (e.g., name@example.com)");
+    return;
+  }
+
+  try {
+    const url = authMode === "login" ? `${API}/login` : `${API}/signup`;
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: email.split("@")[0],   // temporary, adjust if you add name field
+        email,
+        password,
+        role,
+        school,
+        area_of_study: fieldOfStudy,
+      }),
+    });
+    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+    const data = await resp.json();
+
+    // ✅ Save the logged-in user id
+    setUserId(data.id);
 
     showToast("success", authMode === "login" ? "Logged in!" : "Signed up!");
     setTimeout(() => {
@@ -192,23 +215,30 @@ export default function App() {
       }
       setPage("main");
     }, 1000);
-  };
+  } catch (err) {
+    showToast("error", `Auth failed: ${err.message}`);
+  }
+};
 
   async function findMentors() {
-    setLoading(true);
-    setSearched(true);
-    setMentors([]);
-    try {
-      const resp = await fetch(`${API}/mentors/`);
-      if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
-      const data = await resp.json();
-      setMentors(Array.isArray(data) ? data : data.results || []);
-    } catch (err) {
-      showToast("error", `Failed to load mentors: ${err.message}`);
-    } finally {
-      setLoading(false);
-    }
+  setLoading(true);
+  setSearched(true);
+  setMentors([]);
+  try {
+    if (!userId) throw new Error("No user logged in");
+
+    const resp = await fetch(
+    );
+    if (!resp.ok) throw new Error(`${resp.status} ${resp.statusText}`);
+    const data = await resp.json();
+    setMentors(Array.isArray(data) ? data : []);
+  } catch (err) {
+    showToast("error", `Failed to load mentors: ${err.message}`);
+  } finally {
+    setLoading(false);
   }
+}
+
 
   const handlePasswordChange = () => {
     if (!oldPassword || !password) {
