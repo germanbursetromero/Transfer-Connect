@@ -7,11 +7,11 @@ from backend.database import Base, engine, SessionLocal
 from backend import models
 from backend.matching import find_matches
 
-# ✅ Create database tables
+# Create database tables
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
-# ✅ Allow React frontend
+# Allow React frontend
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -27,7 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Database session dependency
+# Database session dependency
 def get_db():
     db = SessionLocal()
     try:
