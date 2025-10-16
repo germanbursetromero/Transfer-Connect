@@ -22,11 +22,11 @@
 
 Our system doesn’t just list mentors randomly. It ranks them based on how well they match a student’s profile:
 
-  - Did the mentor transfer from the same previous school? ✅
+  - Did the mentor transfer from the same previous school? 
   
-  - Are they in the same field of study? ✅
+  - Are they in the same field of study? 
   
-  - Are they already at the student’s desired university? ✅
+  - Are they already at the student’s desired university? 
   
 
 The better the match, the higher they appear — giving students the most relevant guidance first.
